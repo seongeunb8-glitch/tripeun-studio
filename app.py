@@ -3,6 +3,7 @@ from google import genai
 from google.genai import types
 from PIL import Image
 import os
+import streamlit.components.v1 as components
 
 # --- 페이지 설정 ---
 st.set_page_config(page_title="트립은 블로그 올인원 스튜디오", layout="wide", page_icon="✈️")
@@ -79,7 +80,7 @@ with col1:
         placeholder="예: 하카타역 바로 앞에 있어 접근성이 정말 좋고, 후쿠오카 여행 중 쇼핑하러 와볼만한 곳"
     )
 
-    generate_btn = st.button("🚀 네이버 맞춤 원고 생성 (특수기호 완전 제거)", type="primary", use_container_width=True)
+    generate_btn = st.button("🚀 원고 생성하기", type="primary", use_container_width=True)
 
 with col2:
     st.subheader("📝 3. 완성된 원고 & 검수 리포트")
@@ -89,40 +90,41 @@ with col2:
         if not post_title or not target_keyword or not main_details or not practical_info:
             st.warning("⚠️ 제목, 키워드, 주요 내용, 실용 정보는 필수 입력 사항입니다.")
         else:
-            with st.spinner("사진들을 분석하고 마크다운 기호 없이 깔끔하게 원고를 작성하고 있습니다... (약 20~35초 소요)"):
+            with st.spinner("사진들을 분석하고 모바일 줄바꿈을 적용해 원고를 작성하고 있습니다... (약 20~35초 소요)"):
                 
                 system_instruction = f"""
 당신은 네이버 인기 여행 전문 블로거 '여행블로거 트립은'입니다.
 전달받은 [사진들]을 분석하고, 아래 엄격한 고정 규칙을 100% 준수하여 생생하고 솔직한 블로그 글을 작성하세요.
 
-[🚨 절대 금지 기호 및 텍스트 서식 규칙 - 최우선 엄수]
-1. 마크다운 특수문자 및 따옴표 절대 사용 금지:
-   - 별표 기호(** 또는 *) 절대 사용 금지! 굵은 글씨나 강조를 위해 **단어** 형태로 쓰지 마세요.
-   - 샵 기호(#, ##, ###) 절대 사용 금지! 소제목에 샵 기호를 붙이지 마세요.
-   - 큰따옴표(") 절대 사용 금지! 인용이나 강조 시에도 큰따옴표를 쓰지 마세요.
-   - 소제목은 마크다운 기호 없이 오직 [소제목 이름] 또는 일반 텍스트 줄바꿈으로만 표기하세요.
-   - 네이버 블로그 에디터에 그대로 '복사-붙여넣기'할 수 있도록 순수한 텍스트만 출력해야 합니다.
-
-2. 모바일 가독성 줄바꿈(엔터) 규칙:
-   - 글이 벽돌처럼 뭉쳐 있으면 절대 안 됩니다.
-   - 1~2문장이 끝날 때마다 반드시 '빈 줄(줄바꿈 2번, 엔터)'을 넣어 시각적인 여백을 확보하세요.
-   - 모바일 화면에서 스크롤을 내리며 가볍게 읽을 수 있도록 리듬감 있게 호흡을 띄워 작성하세요.
-
-3. 분량 규칙:
+[고정 규칙]
+1. 분량 규칙 (절대 엄수):
    - 최종 본문 분량: 공백 포함 반드시 2,000자 이상, 4,000자 미만 (적정 목표: 2,500자~3,500자)
    - 4,000자를 넘기지 마세요. 불필요하게 늘어지지 않도록 깔끔한 호흡을 유지하세요.
    - docx 파일 등 외부 파일 없이 순수 텍스트 본문으로 바로 작성합니다.
 
+2. 마크다운 특수문자 및 따옴표 절대 사용 금지:
+   - 별표 기호(** 또는 *) 절대 사용 금지! 굵은 글씨를 위해 **단어** 형태로 쓰지 마세요.
+   - 샵 기호(#, ##, ###) 절대 사용 금지!
+   - 큰따옴표(") 절대 사용 금지!
+   - 소제목은 마크다운 기호 없이 오직 [소제목 이름] 또는 일반 텍스트 줄바꿈으로만 표기하세요.
+   - 네이버 블로그 스마트에디터에 바로 복사-붙여넣기할 수 있는 순수 텍스트만 출력하세요.
+
+3. 모바일 가독성 줄바꿈(엔터) 규칙:
+   - 글이 벽돌처럼 뭉쳐 있으면 안 됩니다.
+   - 1~2문장이 끝날 때마다 반드시 '빈 줄(엔터 2번)'을 넣어 시각적인 여백을 확보하세요.
+   - 스마트폰 화면에서 스크롤을 내리며 가볍게 읽을 수 있도록 리듬감 있게 호흡을 띄워 작성하세요.
+
 4. 사진 묶기 및 태그 규칙:
    - 사진 한 장마다 억지로 말을 길게 늘이지 마세요.
-   - 유사한 장면이나 연속된 사진은 2~3개씩 묶어서 배치하세요. (예: [사진 1, 2: 매장 외관 및 웨이팅 현장], [사진 3, 4: 산리오 굿즈 코너 모음])
+   - 유사한 장면이나 연속된 사진은 2~3개씩 묶어서 배치하세요. (예: [사진 1, 2: 매장 외관 및 웨이팅 현장], [사진 3, 4, 5: 산리오 굿즈 코너 모음])
    - 묶은 사진 단위로 간결하고 생생하게 설명하세요.
    - 사진 태그 위아래로도 빈 줄(엔터)을 넣어 깔끔하게 분리하세요.
 
-5. 시작 문구 및 호칭:
+5. 블로거 정체성 & 기본 설정:
+   - 블로거 이름: 여행블로거 트립은
    - 반드시 "안녕하세요, 여행블로거 트립은이에요!" 로 시작합니다. (따옴표 없이 텍스트만 출력)
-   - 독자를 항상 여러분 으로 지칭합니다.
    - 1인칭 시점, 실제 경험한 사람처럼 생생하게 작성합니다.
+   - 독자를 항상 "여러분" 으로 지칭합니다.
 
 6. 제목 & 키워드 규칙:
    - 제목: {post_title} (제목 자체는 변경하지 않고 그대로 사용)
@@ -147,16 +149,17 @@ with col2:
    - [메인 경험 섹션]: 2~4개 소제목으로 구분 (음식의 경우: 비주얼 묘사 -> 맛 묘사 -> 개인 감상 순서 / 수치 정보 포함)
    - [총평 or 마무리]: 전체 경험 한 줄 요약, 가성비 평가 (가격 대비 만족도), 재방문 의사/추천 대상, 권유형 마무리
 
-9. 가격 및 정보 표기 방식:
+9. 가격 & 정보 표기 및 수집 원칙:
    - 일본 관련 글일 경우 엔화 표기 후 괄호 안에 한화 환산 병기.
-   - 실용 팁은 별도 줄 또는 [실용 팁] 소제목으로 강조.
-   - 없는 정보를 지어내지 말고 파악된 정보만 포함.
+   - 장소/상품 기본 정보(주소, 운영시간, 가격 등), 최신 리뷰 및 평판, 주변 명소/교통편, 시즌 특이사항, 실용 팁 충실히 반영.
+   - 없는 정보를 지어내지 말고 정확하게 파악된 정보만 포함.
 
 10. 금지 사항:
-   - **, *, #, " 기호 사용 절대 금지 (적발 시 본문 정리 필요)
+   - **, *, #, " 기호 사용 절대 금지
    - 4,000자 초과 및 2,000자 미달 금지
    - 긴 문단으로 뭉쳐 쓰는 행위 절대 금지 (1~2문장 단위 줄바꿈 엄수)
    - 지나치게 격식체 or 광고성 홍보 문체 금지
+   - 소제목 남발 금지
    - 키워드 몰아넣기 금지
    - 제목 단어 누락 금지
 """
@@ -237,9 +240,8 @@ with col2:
                         )
                         final_text = expand_response.text
 
-                    # 파이썬 레벨에서 혹시 모를 잔여 마크다운 기호 원천 삭제 필터링
+                    # 파이썬 레벨 필터링 (마크다운 기호 및 따옴표 제거)
                     final_text = final_text.replace("**", "").replace('"', "")
-                    # 줄 시작 부분의 마크다운 샵(#) 제거
                     clean_lines = []
                     for line in final_text.split("\n"):
                         stripped_line = line.lstrip()
@@ -263,7 +265,46 @@ with col2:
                         m2.metric("키워드 출현 횟수", f"{kw_count}회", delta="정상 (4~6회)" if 4 <= kw_count <= 6 else "수정 권장")
                         m3.metric("제목 단어 누락", f"{len(missing_words)}개", delta="전체 포함 완료" if not missing_words else f"누락: {', '.join(missing_words)}")
 
-                        st.text_area("스마트에디터용 원고 본문", value=final_text, height=550)
+                        # 📋 1. 원클릭 원고 복사 큰 버튼 (자바스크립트 기반 클립보드 복사)
+                        escaped_text = final_text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
+                        copy_html = f"""
+                        <div style="margin: 12px 0;">
+                            <button id="copyBtn" onclick="copyContent()" style="
+                                width: 100%;
+                                background: linear-gradient(135deg, #03C75A 0%, #00B14F 100%);
+                                color: white;
+                                border: none;
+                                padding: 14px 20px;
+                                border-radius: 8px;
+                                font-size: 16px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                box-shadow: 0 4px 10px rgba(3, 199, 90, 0.25);
+                                transition: all 0.2s ease;
+                            ">📋 원고 전체 클립보드에 복사하기</button>
+                        </div>
+                        <script>
+                        function copyContent() {{
+                            const text = `{escaped_text}`;
+                            navigator.clipboard.writeText(text).then(function() {{
+                                const btn = document.getElementById("copyBtn");
+                                btn.innerText = "✅ 복사 완료! 네이버 블로그에 바로 붙여넣기 하세요!";
+                                btn.style.background = "#1e1e1e";
+                                setTimeout(function() {{
+                                    btn.innerText = "📋 원고 전체 클립보드에 복사하기";
+                                    btn.style.background = "linear-gradient(135deg, #03C75A 0%, #00B14F 100%)";
+                                }}, 2500);
+                            }}).catch(function(err) {{
+                                alert("복사 실패: " + err);
+                            }});
+                        }}
+                        </script>
+                        """
+                        components.html(copy_html, height=65)
+
+                        # 📋 2. 마우스 올리면 우측 상단에 복사 아이콘(네모 2개)이 바로 뜨는 코드 블록 박스
+                        st.caption("👇 박스 우측 상단 네모 아이콘(📋)을 눌러도 전체 복사됩니다:")
+                        st.code(final_text, language="markdown")
 
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
