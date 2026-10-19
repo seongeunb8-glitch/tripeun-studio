@@ -3,6 +3,7 @@ from google import genai
 from google.genai import types
 from PIL import Image
 import os
+import re
 import streamlit.components.v1 as components
 
 # --- 페이지 설정 ---
@@ -16,7 +17,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='main-title'>✈️ 트립은 블로그 올인원 스튜디오</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>사진 다중 분석 & 트립은 스타일 2,000자~4,000자 네이버 스마트에디터 전용 블로그 글 완성</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>사진 다중 분석 & 트립은 스타일 2,000자~4,000자 모바일 최적화 블로그 글 완성</div>", unsafe_allow_html=True)
 
 # --- 안전한 API 키 설정 (비밀 금고 우선 연동) ---
 api_key = None
@@ -80,7 +81,7 @@ with col1:
         placeholder="예: 하카타역 바로 앞에 있어 접근성이 정말 좋고, 후쿠오카 여행 중 쇼핑하러 와볼만한 곳"
     )
 
-    generate_btn = st.button("🚀 원고 생성하기", type="primary", use_container_width=True)
+    generate_btn = st.button("🚀 원고 생성하기 (2,000자~4,000자)", type="primary", use_container_width=True)
 
 with col2:
     st.subheader("📝 3. 완성된 원고 & 검수 리포트")
@@ -90,39 +91,40 @@ with col2:
         if not post_title or not target_keyword or not main_details or not practical_info:
             st.warning("⚠️ 제목, 키워드, 주요 내용, 실용 정보는 필수 입력 사항입니다.")
         else:
-            with st.spinner("사진들을 분석하고 모바일 줄바꿈을 적용해 원고를 작성하고 있습니다... (약 20~35초 소요)"):
+            with st.spinner("사진들을 분석하고 2,000자~4,000자 규격 맞춤 원고를 작성하고 있습니다... (약 20~35초 소요)"):
                 
                 system_instruction = f"""
 당신은 네이버 인기 여행 전문 블로거 '여행블로거 트립은'입니다.
 전달받은 [사진들]을 분석하고, 아래 엄격한 고정 규칙을 100% 준수하여 생생하고 솔직한 블로그 글을 작성하세요.
 
 [고정 규칙]
-1. 분량 규칙 (절대 엄수):
-   - 최종 본문 분량: 공백 포함 반드시 2,000자 이상, 4,000자 미만 (적정 목표: 2,500자~3,500자)
-   - 4,000자를 넘기지 마세요. 불필요하게 늘어지지 않도록 깔끔한 호흡을 유지하세요.
+1. 분량 규칙 (절대 엄수 - 최우선 규칙):
+   - 최종 본문 분량: **공백 포함 반드시 2,000자 이상, 4,000자 미만** (적정 목표: 2,500자~3,500자)
+   - **절대로 4,000자를 넘기면 안 됩니다.** 불필요하게 말을 늘어놓거나 사족을 길게 쓰지 마세요.
+   - 2,000자 미만으로 너무 짧아도 안 됩니다.
    - docx 파일 등 외부 파일 없이 순수 텍스트 본문으로 바로 작성합니다.
 
 2. 마크다운 특수문자 및 따옴표 절대 사용 금지:
-   - 별표 기호(** 또는 *) 절대 사용 금지! 굵은 글씨를 위해 **단어** 형태로 쓰지 마세요.
+   - 별표 기호(** 또는 *) 절대 사용 금지! 굵은 글씨용 별표 쓰지 마세요.
    - 샵 기호(#, ##, ###) 절대 사용 금지!
    - 큰따옴표(") 절대 사용 금지!
-   - 소제목은 마크다운 기호 없이 오직 [소제목 이름] 또는 일반 텍스트 줄바꿈으로만 표기하세요.
-   - 네이버 블로그 스마트에디터에 바로 복사-붙여넣기할 수 있는 순수 텍스트만 출력하세요.
+   - 소제목은 마크다운 기호 없이 오직 [소제목 이름] 형태로만 표기하세요.
+   - 네이버 블로그 스마트에디터에 바로 붙여넣을 수 있는 순수 텍스트만 출력하세요.
 
-3. 모바일 가독성 줄바꿈(엔터) 규칙:
+3. 모바일 가독성 줄바꿈 및 문장 규칙:
+   - 문장은 절대 길게 이어 쓰지 마세요.
+   - 1~2문장이 끝나면 반드시 줄바꿈 2번(엔터)을 쳐서 빈 줄을 두세요.
    - 글이 벽돌처럼 뭉쳐 있으면 안 됩니다.
-   - 1~2문장이 끝날 때마다 반드시 '빈 줄(엔터 2번)'을 넣어 시각적인 여백을 확보하세요.
-   - 스마트폰 화면에서 스크롤을 내리며 가볍게 읽을 수 있도록 리듬감 있게 호흡을 띄워 작성하세요.
 
 4. 사진 묶기 및 태그 규칙:
-   - 사진 한 장마다 억지로 말을 길게 늘이지 마세요.
-   - 유사한 장면이나 연속된 사진은 2~3개씩 묶어서 배치하세요. (예: [사진 1, 2: 매장 외관 및 웨이팅 현장], [사진 3, 4, 5: 산리오 굿즈 코너 모음])
+   - 사진 한 장마다 억지로 말을 늘이지 마세요.
+   - 유사한 장면이나 연속된 사진은 2~3개씩 묶어서 배치하세요. (예: [사진 1, 2: 매장 외관 및 웨이팅 현장], [사진 3, 4: 산리오 굿즈 코너 모음])
    - 묶은 사진 단위로 간결하고 생생하게 설명하세요.
    - 사진 태그 위아래로도 빈 줄(엔터)을 넣어 깔끔하게 분리하세요.
 
 5. 블로거 정체성 & 기본 설정:
    - 블로거 이름: 여행블로거 트립은
-   - 반드시 "안녕하세요, 여행블로거 트립은이에요!" 로 시작합니다. (따옴표 없이 텍스트만 출력)
+   - 모든 글은 "안녕하세요, 여행블로거 트립은이에요!" 로 시작합니다. (따옴표 없이 텍스트만 출력)
    - 1인칭 시점, 실제 경험한 사람처럼 생생하게 작성합니다.
    - 독자를 항상 "여러분" 으로 지칭합니다.
 
@@ -149,14 +151,17 @@ with col2:
    - [메인 경험 섹션]: 2~4개 소제목으로 구분 (음식의 경우: 비주얼 묘사 -> 맛 묘사 -> 개인 감상 순서 / 수치 정보 포함)
    - [총평 or 마무리]: 전체 경험 한 줄 요약, 가성비 평가 (가격 대비 만족도), 재방문 의사/추천 대상, 권유형 마무리
 
-9. 가격 & 정보 표기 및 수집 원칙:
+9. 가격 & 정보 표기 방식:
    - 일본 관련 글일 경우 엔화 표기 후 괄호 안에 한화 환산 병기.
-   - 장소/상품 기본 정보(주소, 운영시간, 가격 등), 최신 리뷰 및 평판, 주변 명소/교통편, 시즌 특이사항, 실용 팁 충실히 반영.
-   - 없는 정보를 지어내지 말고 정확하게 파악된 정보만 포함.
+   - 가격 정보는 자연스러운 문장 안에 녹이기.
+   - 표(table)가 필요한 경우 깔끔한 표 형식 사용.
+   - 실용 팁은 별도 줄 또는 [실용 팁] 소제목으로 강조.
+   - 없는 정보는 지어내지 말고 파악된 정보만 포함.
 
-10. 금지 사항:
+10. 작성 시 금지 사항:
+   - **4,000자 초과 절대 금지** (장황하게 늘어놓지 말 것)
+   - 2,000자 미달 금지
    - **, *, #, " 기호 사용 절대 금지
-   - 4,000자 초과 및 2,000자 미달 금지
    - 긴 문단으로 뭉쳐 쓰는 행위 절대 금지 (1~2문장 단위 줄바꿈 엄수)
    - 지나치게 격식체 or 광고성 홍보 문체 금지
    - 소제목 남발 금지
@@ -172,12 +177,12 @@ with col2:
 - 실용 정보: {practical_info}
 - 강조 포인트: {highlight_point}
 
-본문을 작성할 때 다음 규칙을 철저히 지켜주세요:
-1. 본문 어디에도 **, *, # 기호와 큰따옴표(")를 절대 쓰지 마세요. 소제목은 [소제목] 형태로만 쓰세요.
-2. 모바일에서 시원하게 읽히도록 반드시 1~2문장마다 빈 줄(엔터)을 넣어주세요.
-3. 사진 태그는 2~3장씩 묶어서 [사진 1, 2: ...] 형태로 작성해주세요.
-4. 분량은 반드시 '공백 포함 2,000자 이상 ~ 4,000자 미만' 범위로 맞춰주세요.
-5. 키워드 '{target_keyword}'는 글 전체에서 4회~6회 분산 삽입해주세요.
+본문을 작성할 때 다음 사항을 철저히 지켜주세요:
+1. 분량: 반드시 '공백 포함 2,000자 이상 ~ 4,000자 미만'으로 작성하세요. 4,000자를 절대 넘기지 마세요!
+2. 서식: 본문 어디에도 **, *, # 기호와 큰따옴표(")를 절대 쓰지 마세요. 소제목은 [소제목] 형태로만 쓰세요.
+3. 모바일 줄바꿈: 문장을 짧게 끊고, 1~2문장마다 반드시 빈 줄(엔터 2번)을 넣어주세요.
+4. 사진 태그: 2~3장씩 묶어서 [사진 1, 2: ...] 형태로 작성해주세요.
+5. 키워드: '{target_keyword}'는 본문 전체에서 4회~6회만 들어가도록 자연스럽게 분산 삽입해주세요.
 """
 
                 contents = []
@@ -192,19 +197,19 @@ with col2:
                         config=types.GenerateContentConfig(
                             system_instruction=system_instruction,
                             temperature=0.7,
-                            max_output_tokens=5000,
+                            max_output_tokens=4500,
                         )
                     )
                     
                     final_text = response.text
 
-                    # 4,000자 초과 시 압축 루프
+                    # 4,000자 초과 시 강력한 압축 루프
                     if len(final_text) >= 4000:
                         trim_prompt = f"""
-현재 글의 분량이 {len(final_text)}자로 4,000자를 초과했습니다.
-글의 톤앤매너, 모바일 줄바꿈(엔터), 키워드({target_keyword} 4~6회), 사진 묶음 태그는 유지하면서
-중복되거나 늘어진 묘사를 정돈하여 전체 글자 수를 '공백 포함 2,500자~3,500자 사이'로 맞춰 다시 작성해주세요.
-주의: 본문에 **, *, #, " 기호는 절대 쓰지 마세요.
+현재 글의 분량이 {len(final_text)}자로 4,000자를 초과했습니다!
+규칙 위반이므로, 글의 톤앤매너, 짧은 문장(1~2문장마다 엔터 빈 줄), 키워드({target_keyword} 4~6회), 사진 묶음 태그는 유지하면서
+중복되거나 늘어진 묘사를 깔끔하게 쳐내어 전체 글자 수를 '공백 포함 2,500자~3,300자 사이'로 확실히 줄여 다시 작성해주세요.
+주의: 본문에 **, *, #, " 기호는 절대 쓰지 마세요. 4,000자 초과는 절대 금지입니다.
 
 [현재 초안]
 {final_text}
@@ -224,7 +229,7 @@ with col2:
                         expand_prompt = f"""
 현재 글의 분량이 {len(final_text)}자로 2,000자 미만입니다.
 '공백 포함 2,000자 이상, 4,000자 미만' 기준을 충족하기 위해, 
-기존 톤앤매너, 모바일 줄바꿈, 키워드 빈도(4~6회)를 지키며 감상과 실용 꿀팁을 보강해 2,500자~3,200자 내외로 다시 작성해주세요.
+기존 톤앤매너, 모바일 줄바꿈, 키워드 빈도(4~6회)를 지키며 감상과 실용 꿀팁을 보강해 2,300자~3,000자 내외로 다시 작성해주세요.
 주의: 본문에 **, *, #, " 기호는 절대 쓰지 마세요.
 
 [현재 초안]
@@ -240,15 +245,38 @@ with col2:
                         )
                         final_text = expand_response.text
 
-                    # 파이썬 레벨 필터링 (마크다운 기호 및 따옴표 제거)
+                    # 🛠️ 1. 마크다운 특수기호 및 따옴표 2차 자동 박멸 필터링
                     final_text = final_text.replace("**", "").replace('"', "")
                     clean_lines = []
                     for line in final_text.split("\n"):
-                        stripped_line = line.lstrip()
-                        if stripped_line.startswith("#"):
-                            line = stripped_line.lstrip("#").strip()
+                        stripped = line.lstrip()
+                        if stripped.startswith("#"):
+                            line = stripped.lstrip("#").strip()
                         clean_lines.append(line)
                     final_text = "\n".join(clean_lines)
+
+                    # 🛠️ 2. 파이썬 모바일 강제 엔터 분할기 (1~2문장마다 강제 빈 줄 삽입)
+                    paragraphs = final_text.split("\n\n")
+                    formatted_paragraphs = []
+                    for para in paragraphs:
+                        para = para.strip()
+                        if not para:
+                            continue
+                        if para.startswith("[") and para.endswith("]"):
+                            formatted_paragraphs.append(para)
+                            continue
+                        
+                        sentences = re.split(r'(?<=[.!?~])\s+', para)
+                        chunk = []
+                        for s in sentences:
+                            chunk.append(s.strip())
+                            if len(chunk) >= 2:
+                                formatted_paragraphs.append(" ".join(chunk))
+                                chunk = []
+                        if chunk:
+                            formatted_paragraphs.append(" ".join(chunk))
+
+                    final_text = "\n\n".join(formatted_paragraphs)
 
                     # 검증 로직
                     char_count = len(final_text)
@@ -265,7 +293,7 @@ with col2:
                         m2.metric("키워드 출현 횟수", f"{kw_count}회", delta="정상 (4~6회)" if 4 <= kw_count <= 6 else "수정 권장")
                         m3.metric("제목 단어 누락", f"{len(missing_words)}개", delta="전체 포함 완료" if not missing_words else f"누락: {', '.join(missing_words)}")
 
-                        # 📋 1. 원클릭 원고 복사 큰 버튼 (자바스크립트 기반 클립보드 복사)
+                        # 📋 1. 원클릭 클립보드 복사 큰 버튼
                         escaped_text = final_text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
                         copy_html = f"""
                         <div style="margin: 12px 0;">
@@ -302,7 +330,7 @@ with col2:
                         """
                         components.html(copy_html, height=65)
 
-                        # 📋 2. 마우스 올리면 우측 상단에 복사 아이콘(네모 2개)이 바로 뜨는 코드 블록 박스
+                        # 📋 2. 코드 블록 박스
                         st.caption("👇 박스 우측 상단 네모 아이콘(📋)을 눌러도 전체 복사됩니다:")
                         st.code(final_text, language="markdown")
 
