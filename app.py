@@ -15,7 +15,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='main-title'>✈️ 트립은 블로그 올인원 스튜디오</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>사진 다중 분석 & 트립은 스타일 3,000자~5,000자 블로그 글 자동 완성</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>사진 다중 분석 & 트립은 스타일 5,000자 블로그 글 자동 완성</div>", unsafe_allow_html=True)
 
 # --- 안전한 API 키 설정 (깃허브 유출 방지) ---
 api_key = None
@@ -73,7 +73,7 @@ with col1:
     )
     practical_info = st.text_area(
         "포함할 실용 정보 (가격, 주소 등) *", 
-        placeholder="예: 일본 〒812-0012 Fukuoka, Hakata Ward, Hakataekichuogai, 2−1 博多バスターミナル 店５階, 가격표 없는 물품 세금제외 100엔, 매일 09:00-21:00, 주차 불가 근처 공영주차장 이용"
+        placeholder="예: 일본 〒812-0012 Fukuoka, Hakata Ward, Hakataekichuogai, 2−1 博多バスター미ナル 店５階, 가격표 없는 물품 세금제외 100엔, 매일 09:00-21:00, 주차 불가 근처 공영주차장 이용"
     )
     highlight_point = st.text_input(
         "특별히 강조하고 싶은 포인트", 
@@ -122,22 +122,27 @@ with col2:
    - 키워드 "{target_keyword}"는 본문 전체에서 최소 4회, 최대 6회 자연스럽게 분산 삽입하세요.
 
 7. 게시글 구조:
-   - [도입부]: "안녕하세요, 여행블로거 트립은이에요!"로 시작, 개인적 배경/계기 및 공감 상황 (간결하게 2~3줄)
+   - [도입부]: "안녕하세요, 여행블로거 트립은이에요!"로 시작, 이번 주제를 소개하게 된 개인적인 배경/계기, 독자의 공감을 끌어내는 상황 설명, 자연스럽게 본론으로 연결 (간결하게 2~3줄 작성)
    - [소제목: 제목 반복 or 핵심 정보]: 장소명/상품명 + 주소 또는 핵심 정보 블록
    - [접근성 & 기본 정보]: 가는 방법, 위치, 운영시간, 실용 정보
    - [메인 경험 섹션]: 2~4개 굵은 소제목으로 구분 (음식의 경우: 비주얼 묘사 -> 맛 묘사 -> 개인 감상 순서 / 수치 정보 포함)
-   - [총평 or 마무리]: 전체 경험 한 줄 요약, 가성비 평가, 재방문 의사/추천 대상, "여러분들도 ~해보시는 건 어떨까요?" 식의 권유
+   - [총평 or 마무리]: 전체 경험 한 줄 요약, 가성비 평가 (가격 대비 만족도), 재방문 의사/추천 대상, "여러분들도 ~해보시는 건 어떨까요?" 식의 권유
 
 8. 가격 및 분량 규격:
    - 일본 관련 글일 경우 엔화 표기 후 괄호 안에 한화 환산 병기.
+   - 표(table)가 필요한 경우 깔끔한 표 형식 사용.
    - docx 등 외부 파일로 생성하지 말고 순수 텍스트 본문으로 바로 작성.
-   - 최종 본문 분량: **공백 포함 3,000자 이상 ~ 5,000자 미만** 엄수.
+   - 최종 본문 분량: **공백 포함 5,000자 이상** 엄수.
 
-9. 금지 사항:
+9. 정보 수집 & 활용 방식:
+   - 장소/상품 기본 정보(주소, 운영시간, 가격 등), 최신 리뷰 및 평판, 주변 명소/교통편, 시즌 특이사항, 실용 팁을 충실히 반영.
+   - 없는 정보를 지어내지 말고 정확하게 파악된 정보만 포함할 것.
+
+10. 금지 사항:
    - 지나치게 격식체 or 딱딱한 문어체 금지
    - "본 포스팅은..." 식의 블로그 광고 문체 금지
    - 소제목 남발 금지
-   - 사실 확인 안 된 허위 정보 생성 금지
+   - 사실 확인 안 된 정보를 단정적으로 서술 금지
    - 키워드 연속 몰아넣기 금지
    - 제목 단어 누락 금지
 """
@@ -151,7 +156,7 @@ with col2:
 - 강조 포인트: {highlight_point}
 
 업로드된 사진들의 시각 정보와 위 내용을 결합하여 본문을 작성해주세요.
-분량은 반드시 공백 포함 3,000자 이상, 5,000자 미만이 되도록 각 코스별 묘사와 감상을 상세하게 풀어주세요.
+분량은 반드시 공백 포함 5,000자 이상이 되도록 각 코스별 묘사와 현장 감상을 매우 상세하게 풀어주세요.
 """
 
                 contents = []
@@ -161,7 +166,7 @@ with col2:
 
                 try:
                     response = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-3.8-flash",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             system_instruction=system_instruction,
@@ -171,18 +176,18 @@ with col2:
                     
                     final_text = response.text
 
-                    # 3,000자 미달 시 자동 분량 확장 루프
-                    if len(final_text) < 2800:
+                    # 5,000자 미달 시 자동 분량 확장 루프
+                    if len(final_text) < 4600:
                         expand_prompt = f"""
-방금 작성한 글의 분량이 {len(final_text)}자로 3,000자 미만입니다. 
-'공백 포함 3,000자 이상 5,000자 미만' 조건을 완벽히 충족하기 위해, 
-기존 글의 톤앤매너, 사진 위치 태그([사진 1] 등), 키워드 빈도(4~6회 유지)를 지키면서 현장 분위기 묘사와 감상, 실용 꿀팁을 대폭 추가해 3,000자 이상으로 자연스럽게 늘려 다시 작성해주세요.
+방금 작성한 글의 분량이 {len(final_text)}자로 5,000자 미만입니다. 
+'공백 포함 5,000자 이상' 조건을 완벽히 충족하기 위해, 
+기존 글의 톤앤매너, 사진 위치 태그([사진 1] 등), 키워드 빈도(4~6회 유지)를 지키면서 현장 분위기 묘사와 감상, 실용 꿀팁을 대폭 추가해 전체 글을 5,000자 이상으로 길고 풍성하게 다시 작성해주세요.
 
 [현재 초안]
 {final_text}
 """
                         expand_response = client.models.generate_content(
-                            model="gemini-2.5-flash",
+                            model="gemini-3.8-flash",
                             contents=[expand_prompt],
                             config=types.GenerateContentConfig(
                                 system_instruction=system_instruction,
@@ -202,7 +207,7 @@ with col2:
                         st.success("원고 생성이 완료되었습니다! 🎉")
                         
                         m1, m2, m3 = st.columns(3)
-                        m1.metric("공백 포함 글자 수", f"{char_count}자", delta="적정 범위 (3천~5천자)" if 3000 <= char_count < 5000 else f"범위 확인 ({char_count}자)")
+                        m1.metric("공백 포함 글자 수", f"{char_count}자", delta="5,000자 달성" if char_count >= 5000 else f"{5000 - char_count}자 부족")
                         m2.metric("키워드 출현 횟수", f"{kw_count}회", delta="정상 (4~6회)" if 4 <= kw_count <= 6 else "수정 권장")
                         m3.metric("제목 단어 누락", f"{len(missing_words)}개", delta="전체 포함 완료" if not missing_words else f"누락: {', '.join(missing_words)}")
 
