@@ -276,8 +276,8 @@ with col2:
                         contents=contents,
                         config=types.GenerateContentConfig(
                             system_instruction=system_instruction,
-                            temperature=0.8, # 감성과 창의성을 살리기 위해 온도를 살짝 높임
-                            max_output_tokens=4500,
+                            temperature=0.7, 
+                            max_output_tokens=8192,
                         )
                     )
                     
