@@ -17,9 +17,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='main-title'>✈️ 트립은 블로그 올인원 스튜디오</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>사진 다중 분석 & 트립은 스타일 2,000자~4,000자 모바일 강제 줄바꿈 블로그 글 완성</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>사진 다중 분석 & 트립은 오리지널 스타일 모바일 강제 줄바꿈 블로그 글 완성</div>", unsafe_allow_html=True)
 
-# --- API 키 설정 ---
+# --- 안전한 API 키 설정 ---
 api_key = None
 if "GEMINI_API_KEY" in st.secrets:
     api_key = st.secrets["GEMINI_API_KEY"]
@@ -28,9 +28,9 @@ elif os.environ.get("GEMINI_API_KEY"):
 
 if not api_key:
     st.sidebar.header("🔑 Gemini API 설정")
-    api_key = st.sidebar.text_input("Gemini API Key를 입력하세요", type="password")
+    api_key = st.sidebar.text_input("Gemini API Key를 입력하세요", type="password", help="Google AI Studio에서 발급받은 API 키를 넣어주세요.")
     if not api_key:
-        st.info("👈 사이드바에 Gemini API Key를 입력해주세요!")
+        st.info("👈 웹사이트 왼쪽 사이드바에 Gemini API Key를 입력해주세요!")
         st.stop()
 
 client = genai.Client(api_key=api_key)
@@ -59,11 +59,26 @@ with col1:
     st.markdown("---")
     st.subheader("✍️ 2. 포스팅 정보 입력")
     
-    post_title = st.text_input("제목 *", placeholder="예: 후쿠오카 가볼만한곳 하카타 버스터미널 일본 다이소 쇼핑 내돈내산")
-    target_keyword = st.text_input("필수 키워드 (4~6회 분산 삽입) *", placeholder="예: 후쿠오카 가볼만한곳")
-    main_details = st.text_area("주요 내용 / 경험 *", placeholder="예: 주말 오후 2시 방문, 외국인들 북적북적. 일본 다이소 산리오 상품 많았음.")
-    practical_info = st.text_area("포함할 실용 정보 (가격, 주소 등) *", placeholder="예: 일본 〒812-0012 Fukuoka, Hakata Ward, Hakataekichuogai, 2−1 博多バスター미ナル 店５階, 100엔")
-    highlight_point = st.text_input("특별히 강조하고 싶은 포인트", placeholder="예: 하카타역 바로 앞에 있어 접근성이 정말 좋음")
+    post_title = st.text_input(
+        "제목 *", 
+        placeholder="예: 후쿠오카 가볼만한곳 하카타 버스터미널 일본 다이소 쇼핑 내돈내산"
+    )
+    target_keyword = st.text_input(
+        "필수 키워드 (4~6회 분산 삽입) *", 
+        placeholder="예: 후쿠오카 가볼만한곳"
+    )
+    main_details = st.text_area(
+        "주요 내용 / 경험 *", 
+        placeholder="예: 주말 오후 2시 방문, 외국인들 북적북적. 일본 다이소 산리오 상품 많았음. sns에서 유명한 제품들 재고 많음."
+    )
+    practical_info = st.text_area(
+        "포함할 실용 정보 (가격, 주소 등) *", 
+        placeholder="예: 일본 〒812-0012 Fukuoka, Hakata Ward, Hakataekichuogai, 2−1 博多バスターミナル 店５階, 가격표 없는 물품 세금제외 100엔, 매일 09:00-21:00, 주차 불가 근처 공영주차장 이용"
+    )
+    highlight_point = st.text_input(
+        "특별히 강조하고 싶은 포인트", 
+        placeholder="예: 하카타역 바로 앞에 있어 접근성이 정말 좋고, 후쿠오카 여행 중 쇼핑하러 와볼만한 곳"
+    )
 
     generate_btn = st.button("🚀 원고 생성하기", type="primary", use_container_width=True)
 
@@ -73,18 +88,17 @@ with col2:
 
     if generate_btn:
         if not post_title or not target_keyword or not main_details or not practical_info:
-            st.warning("⚠️ 필수 입력 항목을 채워주세요.")
+            st.warning("⚠️ 제목, 키워드, 주요 내용, 실용 정보는 필수 입력 사항입니다.")
         else:
-            with st.spinner("사진들을 분석하고 원고를 작성하고 있습니다..."):
+            with st.spinner("사진들을 정밀 분석하고 트립은 오리지널 스타일로 원고를 작성하고 있습니다... (약 25~40초 소요)"):
                 
-                # 원본 프롬프트 전문 반영 (상단 제목 삽입 및 특수기호 금지 규칙 포함)
                 system_instruction = f"""
 당신은 네이버 인기 여행 전문 블로거 '여행블로거 트립은'입니다.
-전달받은 [사진들]을 분석하고, 아래 엄격한 고정 규칙을 100% 준수하여 생생하고 솔직한 블로그 글을 작성하세요.
+전달받은 [사진들]을 방문 순서대로 면밀히 분석하고, 아래 엄격한 고정 규칙을 100% 준수하여 생생하고 솔직한 블로그 글을 작성하세요.
 
 [고정 규칙]
 1. 분량 규칙 (절대 엄수):
-   - 게시글은 반드시 공백 포함 2,500자 이상 ~ 4,000자 미만으로 풍성하게 작성하세요. (4,000자 초과 절대 금지)
+   - 게시글은 반드시 공백 포함 2,500자 이상 ~ 4,000자 미만으로 풍성하고 알차게 작성하세요. (4,000자 초과 금지)
    - docx 파일 등 외부 파일로 생성하지 말고 본문에 순수 텍스트로 바로 작성하세요.
 
 2. 모바일 가독성 줄바꿈 및 문장 길이 (절대 엄수):
@@ -123,6 +137,7 @@ with col2:
 
 7. 사진 묶기 및 태그 규칙:
    - 사진 한 장마다 억지로 말을 늘이지 마세요.
+   - 업로드된 사진들을 순서대로 분석해 사진 속 외관, 내부, 음식, 소품에 딱 맞는 생생한 문장으로 풀어내세요.
    - 비슷한 사진은 2~3개씩 묶어서 배치하세요. (예: [사진 1, 2: 매장 외관 및 웨이팅 현장])
    - 사진 태그 위아래로도 엔터를 쳐서 분리하세요.
 
@@ -175,9 +190,8 @@ with col2:
                 contents.append(prompt_user)
 
                 try:
-                    # 무료 티어 할당량이 정상 제공되는 공식 Flash 모델 사용
                     response = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-3.8-flash",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             system_instruction=system_instruction,
@@ -188,7 +202,7 @@ with col2:
                     
                     final_text = response.text
 
-                    # 1. 특수기호 및 큰따옴표 제거
+                    # 특수기호 및 큰따옴표 제거
                     final_text = final_text.replace("**", "").replace('"', "")
                     clean_lines = []
                     for line in final_text.split("\n"):
@@ -198,22 +212,22 @@ with col2:
                         clean_lines.append(line)
                     final_text = "\n".join(clean_lines).strip()
 
-                    # 2. 맨 상단 제목 강제 삽입 보장
+                    # 최상단 제목 삽입 보장
                     if not final_text.startswith(post_title):
                         final_text = f"{post_title}\n\n{final_text}"
 
-                    # 3. 파이썬 모바일 강제 엔터 분할기 (1~2문장 단위 빈 줄 강제 삽입)
-                    paragraphs = final_text.split("\n\n")
+                    # 강화된 파이썬 모바일 강제 엔터 분할기
+                    raw_paragraphs = [p.strip() for p in final_text.split("\n") if p.strip()]
                     formatted_paragraphs = []
-                    for para in paragraphs:
-                        para = para.strip()
-                        if not para:
-                            continue
-                        if para == post_title or (para.startswith("[") and para.endswith("]")):
-                            formatted_paragraphs.append(para)
+                    
+                    for p in raw_paragraphs:
+                        # 최상단 제목, 소제목 [대괄호], 사진 태그 [사진 ...]는 단독 줄 유지
+                        if p == post_title or (p.startswith("[") and p.endswith("]")):
+                            formatted_paragraphs.append(p)
                             continue
                         
-                        sentences = re.split(r'(?<=[.!?~])\s+', para)
+                        # 한국어 종결 어미 및 문장 부호 뒤 분할
+                        sentences = re.split(r'(?<=[.!?~…])\s+', p)
                         chunk = []
                         for s in sentences:
                             s = s.strip()
@@ -228,9 +242,9 @@ with col2:
 
                     final_text = "\n\n".join(formatted_paragraphs)
 
-                    # 검증 지표 계산
                     char_count = len(final_text)
                     kw_count = final_text.count(target_keyword)
+                    
                     title_words = [w for w in post_title.split() if len(w) > 1]
                     missing_words = [w for w in title_words if w not in final_text]
 
@@ -242,7 +256,6 @@ with col2:
                         m2.metric("키워드 출현 횟수", f"{kw_count}회", delta="정상 (4~6회)" if 4 <= kw_count <= 6 else "수정 권장")
                         m3.metric("제목 단어 누락", f"{len(missing_words)}개", delta="전체 포함 완료" if not missing_words else f"누락: {', '.join(missing_words)}")
 
-                        # 원클릭 클립보드 복사 버튼
                         escaped_text = final_text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
                         copy_html = f"""
                         <div style="margin: 12px 0;">
@@ -278,6 +291,7 @@ with col2:
                         </script>
                         """
                         components.html(copy_html, height=65)
+                        st.caption("👇 박스 우측 상단 네모 아이콘(📋)을 눌러도 전체 복사됩니다:")
                         st.code(final_text, language="markdown")
 
                 except Exception as e:
