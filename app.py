@@ -91,7 +91,7 @@ def format_mobile_lines(text, post_title):
 col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
-    st.subheader("📷 1. 여행 사진 업로드 (DSLR 40장 실시간 압축)")
+    st.subheader("📷 1. 여행 사진 업로드 ")
     uploaded_files = st.file_uploader(
         "방문 순서대로 DSLR 원본 사진들을 선택해주세요 (대용량 일괄 지원)",
         type=["jpg", "jpeg", "png"],
